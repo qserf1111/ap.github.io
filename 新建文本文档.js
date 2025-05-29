@@ -1,4 +1,69 @@
 const express = require('express');
+const session = require('express-session');
+const bodyParser = require('body-parser');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const app = express();
+const port = 3000;
+
+// 添加session和body-parser中间件
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(session({
+    secret: 'your-secret-key',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } // 生产环境应设为true并启用HTTPS
+}));
+
+// 默认用户凭证
+const DEFAULT_USER = {
+    username: 'syeam',
+    password: 'err'
+};
+
+// 登录验证中间件
+function requireLogin(req, res, next) {
+    if (req.session.loggedIn) {
+        return next();
+    }
+    res.status(401).json({ success: false, message: '需要登录' });
+}
+
+// 登录接口
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    
+    if (username === DEFAULT_USER.username && password === DEFAULT_USER.password) {
+        req.session.loggedIn = true;
+        req.session.username = username;
+        res.json({ success: true, message: '登录成功' });
+    } else {
+        res.status(401).json({ success: false, message: '用户名或密码错误' });
+    }
+});
+
+// 登出接口
+app.post('/api/logout', (req, res) => {
+    req.session.destroy();
+    res.json({ success: true, message: '已登出' });
+});
+
+// 检查登录状态接口
+app.get('/api/check-auth', (req, res) => {
+    res.json({ loggedIn: !!req.session.loggedIn });
+});
+
+// 保护所有文件相关接口
+app.use('/api/files', requireLogin);
+app.use('/api/upload', requireLogin);
+app.use('/api/download', requireLogin);
+app.use('/api/file', requireLogin);
+
+// 其余原有代码保持不变...
+const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
