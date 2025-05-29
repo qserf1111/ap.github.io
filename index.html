@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>简易网页网盘</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: 0 auto; }
+        .file-list { border: 1px solid #ddd; padding: 10px; margin-top: 20px; }
+        .file-item { padding: 8px; border-bottom: 1px solid #eee; }
+        .file-item:hover { background-color: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <h1>我的网盘</h1>
+    <input type="file" id="fileInput">
+    <button onclick="uploadFile()">上传文件</button>
+    <div id="fileList" class="file-list"></div>
+
+    <script>
+        let files = [];
+        
+        function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput.files.length > 0) {
+                files.push(fileInput.files[0]);
+                renderFileList();
+            }
+        }
+
+        function renderFileList() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+            files.forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `
+                    ${file.name} 
+                    <button onclick="downloadFile(${index})">下载</button>
+                `;
+                fileList.appendChild(item);
+            });
+        }
+
+        function downloadFile(index) {
+            const file = files[index];
+            const url = URL.createObjectURL(file);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = file.name;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
